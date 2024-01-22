@@ -101,7 +101,7 @@ alias desk='cd /home/apoorva/Desktop/ && tree -L 1'
 alias ls='lsd --icon-theme fancy'
 alias btop='btop --utf-force'
 alias dockersync='docker context use desktop-linux'
-alias bashbackup='cp ~/.bashrc /home/apoorva/Documents/GitHub/dotfiles'
+alias bashbackup='cp ~/.bashrc /home/apoorva/Documents/GitHub/dotfiles && cd /home/apoorva/Documents/GitHub/dotfiles && git add . && git commit -m "update bashrc" && git push origin main'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
