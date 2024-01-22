@@ -101,6 +101,7 @@ alias desk='cd /home/apoorva/Desktop/ && tree -L 1'
 alias ls='lsd --icon-theme fancy'
 alias btop='btop --utf-force'
 alias dockersync='docker context use desktop-linux'
+alias bashbackup='cp ~/.bashrc /home/apoorva/Documents/GitHub/dotfiles'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -130,3 +131,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 . "$HOME/.cargo/env"
+
+
+# VIM MODE
+set -o vi
