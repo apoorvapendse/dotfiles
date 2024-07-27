@@ -1,0 +1,6 @@
+Install docker engine and then docker desktop
+first setup apt repo
+https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+
+then install the deb package from
+https://docs.docker.com/desktop/install/ubuntu/
