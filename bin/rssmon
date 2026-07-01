@@ -1,0 +1,3 @@
+#!/bin/sh
+# Regional screenshot on external monitor (DP-1 / scrot monitor 1)
+exec scrot -M 1 -s "$@"

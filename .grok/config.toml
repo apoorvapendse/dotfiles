@@ -1,0 +1,19 @@
+[hints]
+project_picker_disabled = true
+
+[cli]
+installer = "internal"
+
+[ui]
+max_thoughts_width = 120
+fork_secondary_model = "grok-build"
+yolo = false
+compact_mode = false
+permission_mode = "always-approve"
+
+[mcp_servers.playwright]
+command = "/home/apoorva/.nvm/versions/node/v24.18.0/bin/npx"
+args = [
+    "-y",
+    "@playwright/mcp@latest",
+]

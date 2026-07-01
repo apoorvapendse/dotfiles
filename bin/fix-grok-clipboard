@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+# Linux refuses `cp` onto a running binary ("Text file busy").
+# Write beside it, then `mv` — unlinks the old inode; running procs keep it until exit.
+install_bin() {
+  src=$1 dest=$2
+  [ -x "$src" ] || { echo "missing $src"; return 1; }
+  tmp="${dest}.new.$$"
+  sudo cp "$src" "$tmp"
+  sudo chmod 755 "$tmp"
+  sudo mv -f "$tmp" "$dest"
+  echo "installed $dest"
+}
+install_bin "$HOME/.local/bin/st" /usr/local/bin/st
+install_bin "$HOME/.local/bin/dwm" /usr/local/bin/dwm
+echo
+echo "Done. Old st/dwm processes still run the previous binary until restarted."
+echo "  • New terminals: kill existing st windows, then Mod+Shift+Enter"
+echo "  • Or:  /home/apoorva/.local/bin/st"
+echo "  • Reload dwm (after next login with xinitrc loop): killall dwm"
+echo "Then start grok and drag-select to copy."

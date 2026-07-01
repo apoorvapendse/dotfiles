@@ -1,0 +1,3 @@
+#!/bin/sh
+# Regional screenshot on external monitor → clipboard (PNG)
+exec scrot -M 1 -s -e 'xclip -selection clipboard -t image/png -i $f' "$@"

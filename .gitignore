@@ -2,3 +2,8 @@
 *~
 *.swp
 __pycache__/
+# never commit secrets
+**/.ssh/
+**/auth.json
+**/hosts.yml
+**/*history
