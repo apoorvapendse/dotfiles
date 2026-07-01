@@ -2,8 +2,11 @@
 *~
 *.swp
 __pycache__/
-# never commit secrets
+
+# never commit these
+bin/safari-linux
 **/.ssh/
 **/auth.json
 **/hosts.yml
 **/*history
+.gitconfig

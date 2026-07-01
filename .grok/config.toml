@@ -11,9 +11,7 @@ yolo = false
 compact_mode = false
 permission_mode = "always-approve"
 
-[mcp_servers.playwright]
-command = "/home/apoorva/.nvm/versions/node/v24.18.0/bin/npx"
-args = [
-    "-y",
-    "@playwright/mcp@latest",
-]
+# Install Playwright MCP yourself if you use it:
+# [mcp_servers.playwright]
+# command = "npx"
+# args = ["-y", "@playwright/mcp@latest"]
