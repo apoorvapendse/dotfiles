@@ -1,0 +1,20 @@
+#!/bin/sh
+# Open today's daily note in nvim inside st (works from dmenu).
+# File: ~/Documents/Vault/D Mon, YYYY.md
+# Override vault with DAILYNOTE_DIR.
+
+VAULT="${DAILYNOTE_DIR:-$HOME/Documents/Vault}"
+NOTE="$VAULT/$(date '+%-d %b, %Y').md"
+ST="${HOME}/.local/bin/st"
+NVIM=/usr/bin/nvim
+
+[ -x "$ST" ] || ST="$(command -v st)"
+[ -x "$NVIM" ] || NVIM="$(command -v nvim)"
+
+mkdir -p "$VAULT"
+if [ ! -f "$NOTE" ]; then
+	printf '# %s\n\n' "$(date '+%-d %b, %Y')" > "$NOTE"
+fi
+
+# nvim needs a real terminal — always spawn st (safe from dmenu/dwm)
+exec "$ST" -e "$NVIM" "$NOTE"

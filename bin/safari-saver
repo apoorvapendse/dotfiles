@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Run Safari Drive and force it fullscreen under dwm (EWMH)."""
+import os
+import subprocess
+import sys
+import time
+from ctypes import (
+    CDLL,
+    POINTER,
+    Structure,
+    byref,
+    c_char_p,
+    c_int,
+    c_long,
+    c_ubyte,
+    c_uint,
+    c_ulong,
+    c_void_p,
+    cast,
+)
+
+X11 = CDLL("libX11.so.6")
+
+Bool = c_int
+Status = c_int
+Window = c_ulong
+Atom = c_ulong
+Display_p = c_void_p
+Time = c_ulong
+
+X11.XOpenDisplay.argtypes = [c_char_p]
+X11.XOpenDisplay.restype = Display_p
+X11.XDefaultRootWindow.argtypes = [Display_p]
+X11.XDefaultRootWindow.restype = Window
+X11.XInternAtom.argtypes = [Display_p, c_char_p, Bool]
+X11.XInternAtom.restype = Atom
+X11.XGetWMName.argtypes = [Display_p, Window, c_void_p]
+X11.XGetWMName.restype = Status
+X11.XFetchName.argtypes = [Display_p, Window, POINTER(c_char_p)]
+X11.XFetchName.restype = Status
+X11.XQueryTree.argtypes = [
+    Display_p,
+    Window,
+    POINTER(Window),
+    POINTER(Window),
+    POINTER(POINTER(Window)),
+    POINTER(c_uint),
+]
+X11.XQueryTree.restype = Status
+X11.XFree.argtypes = [c_void_p]
+X11.XFree.restype = None
+X11.XSendEvent.argtypes = [Display_p, Window, Bool, c_long, c_void_p]
+X11.XSendEvent.restype = Status
+X11.XFlush.argtypes = [Display_p]
+X11.XFlush.restype = c_int
+X11.XCloseDisplay.argtypes = [Display_p]
+X11.XCloseDisplay.restype = c_int
+X11.XMapRaised.argtypes = [Display_p, Window]
+X11.XMapRaised.restype = c_int
+X11.XGetWindowProperty.argtypes = [
+    Display_p,
+    Window,
+    Atom,
+    c_long,
+    c_long,
+    Bool,
+    Atom,
+    POINTER(Atom),
+    POINTER(c_int),
+    POINTER(c_ulong),
+    POINTER(c_ulong),
+    POINTER(POINTER(c_ubyte)),
+]
+X11.XGetWindowProperty.restype = c_int
+
+SubstructureRedirectMask = 1 << 20
+SubstructureNotifyMask = 1 << 19
+ClientMessage = 33
+_NET_WM_STATE_ADD = 1
+
+
+class XClientMessageEvent(Structure):
+    _fields_ = [
+        ("type", c_int),
+        ("serial", c_ulong),
+        ("send_event", Bool),
+        ("display", Display_p),
+        ("window", Window),
+        ("message_type", Atom),
+        ("format", c_int),
+        ("data", c_long * 5),
+    ]
+
+
+class XEvent(Structure):
+    _fields_ = [("pad", c_long * 24)]
+
+
+def window_title(dpy, win):
+    name = c_char_p()
+    if X11.XFetchName(dpy, win, byref(name)) and name:
+        try:
+            return name.value.decode(errors="replace")
+        finally:
+            X11.XFree(name)
+    # UTF-8 _NET_WM_NAME
+    net_name = X11.XInternAtom(dpy, b"_NET_WM_NAME", False)
+    utf8 = X11.XInternAtom(dpy, b"UTF8_STRING", False)
+    actual_type = Atom()
+    actual_format = c_int()
+    nitems = c_ulong()
+    bytes_after = c_ulong()
+    prop = POINTER(c_ubyte)()
+    status = X11.XGetWindowProperty(
+        dpy,
+        win,
+        net_name,
+        0,
+        1024,
+        False,
+        utf8,
+        byref(actual_type),
+        byref(actual_format),
+        byref(nitems),
+        byref(bytes_after),
+        byref(prop),
+    )
+    if status == 0 and prop and nitems.value:
+        try:
+            raw = bytes(prop[: nitems.value])
+            return raw.decode("utf-8", errors="replace")
+        finally:
+            X11.XFree(prop)
+    return ""
+
+
+def iter_windows(dpy, root):
+    root_ret = Window()
+    parent = Window()
+    children = POINTER(Window)()
+    nchildren = c_uint()
+    if not X11.XQueryTree(
+        dpy, root, byref(root_ret), byref(parent), byref(children), byref(nchildren)
+    ):
+        return
+    try:
+        for i in range(nchildren.value):
+            w = children[i]
+            yield w
+            yield from iter_windows(dpy, w)
+    finally:
+        if children:
+            X11.XFree(children)
+
+
+def find_safari(dpy, root):
+    for w in iter_windows(dpy, root):
+        title = window_title(dpy, w)
+        if title and ("Safari Drive" in title or title == "Safari Drive"):
+            return w
+    return None
+
+
+def set_fullscreen(dpy, root, win):
+    state = X11.XInternAtom(dpy, b"_NET_WM_STATE", False)
+    fs = X11.XInternAtom(dpy, b"_NET_WM_STATE_FULLSCREEN", False)
+    ev = XClientMessageEvent()
+    ev.type = ClientMessage
+    ev.serial = 0
+    ev.send_event = True
+    ev.display = dpy
+    ev.window = win
+    ev.message_type = state
+    ev.format = 32
+    ev.data[0] = _NET_WM_STATE_ADD
+    ev.data[1] = fs
+    ev.data[2] = 0
+    ev.data[3] = 1  # source indication: application
+    ev.data[4] = 0
+    mask = SubstructureRedirectMask | SubstructureNotifyMask
+    X11.XSendEvent(dpy, root, False, mask, byref(ev))
+    X11.XMapRaised(dpy, win)
+    X11.XFlush(dpy)
+
+
+def main():
+    safari = os.path.expanduser("~/.local/bin/safari-linux")
+    if not os.access(safari, os.X_OK):
+        print(f"safari-saver: missing {safari}", file=sys.stderr)
+        return 1
+
+    dpy = X11.XOpenDisplay(None)
+    if not dpy:
+        print("safari-saver: cannot open display", file=sys.stderr)
+        return 1
+
+    root = X11.XDefaultRootWindow(dpy)
+    proc = subprocess.Popen([safari])
+
+    win = None
+    deadline = time.time() + 10
+    while time.time() < deadline:
+        if proc.poll() is not None:
+            X11.XCloseDisplay(dpy)
+            return proc.returncode or 1
+        win = find_safari(dpy, root)
+        if win:
+            break
+        time.sleep(0.05)
+
+    if win:
+        # dwm may map/tile first; re-assert fullscreen a few times
+        for _ in range(10):
+            set_fullscreen(dpy, root, win)
+            time.sleep(0.1)
+            if proc.poll() is not None:
+                break
+
+    try:
+        return proc.wait()
+    finally:
+        X11.XCloseDisplay(dpy)
+
+
+if __name__ == "__main__":
+    sys.exit(main() or 0)

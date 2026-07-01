@@ -1,0 +1,59 @@
+#!/bin/bash
+# Safe dwm session: quitting dwm (Mod+Shift+q) reloads it; X clients stay alive.
+# End session entirely: Mod+Shift+e (logout flag) or use the display manager.
+
+export PATH="${HOME}/.local/bin:${PATH}"
+export GTK_THEME="${GTK_THEME:-Adwaita:dark}"
+
+DWM="${HOME}/.local/bin/dwm"
+[ -x "$DWM" ] || DWM="$(command -v dwm)"
+if [ ! -x "$DWM" ]; then
+	echo "dwm-session: no dwm binary found" >&2
+	exit 1
+fi
+
+LOGOUT_FLAG="${XDG_CACHE_HOME:-$HOME/.cache}/dwm-logout"
+
+# Nested re-exec under dbus-run-session when needed
+if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ "${DWM_SESSION_HAS_DBUS:-}" != 1 ]; then
+	export DWM_SESSION_HAS_DBUS=1
+	exec dbus-run-session -- /bin/bash "$HOME/.local/bin/dwm-session" "$@"
+fi
+
+systemctl --user import-environment DISPLAY XAUTHORITY PATH 2>/dev/null || true
+dbus-update-activation-environment --systemd DISPLAY XAUTHORITY PATH 2>/dev/null || true
+systemctl --user start pipewire.service pipewire-pulse.service wireplumber.service 2>/dev/null || true
+
+# Idle: Safari Drive (notifier), then slock (locker). Super+L still locks now.
+if command -v xss-lock >/dev/null 2>&1 && command -v xset >/dev/null 2>&1; then
+	# xset s TIMEOUT CYCLE (seconds):
+	#   TIMEOUT idle → run notifier (Safari Drive)
+	#   CYCLE more idle → kill notifier, run locker (slock)
+	# Example: 1 min idle, then ~1 min of safari, then password lock.
+	xset s 60 60
+	xset s on
+	# Avoid stacking duplicates across dwm restarts in this session
+	if ! pgrep -u "$USER" -x xss-lock >/dev/null 2>&1; then
+		# safari-saver forces EWMH fullscreen (tiled under bare safari-linux in dwm)
+		xss-lock -n "$HOME/.local/bin/safari-saver" -- slock &
+	fi
+else
+	echo "dwm-session: install xss-lock and xorg-xset for idle Safari Drive + slock" >&2
+fi
+
+rm -f "$LOGOUT_FLAG"
+
+while true; do
+	if [ -f "$LOGOUT_FLAG" ]; then
+		rm -f "$LOGOUT_FLAG"
+		exit 0
+	fi
+	"$DWM"
+	status=$?
+	if [ -f "$LOGOUT_FLAG" ]; then
+		rm -f "$LOGOUT_FLAG"
+		exit 0
+	fi
+	[ -x "$DWM" ] || exit "$status"
+	sleep 0.2
+done

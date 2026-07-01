@@ -3,6 +3,7 @@
 
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
@@ -70,7 +71,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git zsh-autosuggestions)
+plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -102,34 +103,24 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-alias z="cd $HOME/programming/zulip"
-alias dtop="cd $HOME/Desktop"
-alias zrc="nvim ~/.zshrc"
-alias gca="git commit --amend"
-alias brc="nvim ~/.bashrc"
-alias p="cd $HOME/programming"
-alias nvimconfig="cd $HOME/.config/nvim/ && nvim ."
-export PATH=$HOME/.local/bin:$PATH
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
-alias ec='code /home/apoorva/Desktop/books/extreme\ c'
-alias grum='git pull --rebase upstream main'
-alias lzd='lazydocker'
+
+alias sl="cd $HOME/software/suckless"
+# Screenshots: external monitor (DP-1 / scrot -M 1) vs laptop (eDP-1 / -M 0)
+# fss* = full screen, rss* = region select; clip* = copy PNG to clipboard
+alias fssmon='scrot -M 1'
+alias fsslap='scrot -M 0'
+alias rssmon='scrot -M 1 -s'
+alias clipfssmon='scrot -M 1 -e "xclip -selection clipboard -t image/png -i \$f"'
+alias cliprssmon='scrot -M 1 -s -e "xclip -selection clipboard -t image/png -i \$f"'
+alias dailynote='$HOME/.local/bin/dailynote'
+alias z='$HOME/programming/zulip'
+
+# >>> grok installer >>>
+export PATH="$HOME/.grok/bin:$PATH"
+fpath=(~/.grok/completions/zsh $fpath)
+autoload -Uz compinit && compinit -C
+# <<< grok installer <<<
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-export PATH=/usr/bin:/home/apoorva/.pyenv/shims:/home/apoorva/.pyenv/bin:/home/apoorva/.local/bin:/home/apoorva/.nvm/versions/node/v22.14.0/bin:/home/apoorva/.pyenv/bin:/home/apoorva/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-
-source /etc/environment
-
-export COUCH_NODE_NAME=nonode@nohost
-export COUCH_URL=http://medic:password@localhost:5984/medic
-export COUCHDB_USER=medic 
-export COUCHDB_PASSWORD=password
-
-
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-alias glo="git log --oneline"
-
