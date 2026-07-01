@@ -30,14 +30,11 @@ https://github.com/apoorvapendse/suckless
 | `.config/environment.d/clipboard.conf` | `DISPLAY=:0` for clipboard tools |
 | `.config/touchegg/touchegg.conf` | gestures |
 | `.config/touchpad/40-libinput.conf` | libinput snippet → often `/etc/X11/xorg.conf.d/` |
-| `.config/fish/completions/grok.fish` | Grok CLI fish completion |
-| `.grok/config.toml` | Grok Build UI prefs (no secrets) |
 | `bin/dwm-session` | safe dwm restart + **xss-lock** idle lock |
 | `bin/safari-saver` | EWMH fullscreen wrapper for Safari Drive under dwm |
 | `bin/dailynote` | daily note in st + nvim (`DAILYNOTE_DIR` / `~/Documents/Vault`) |
 | `bin/clipfssmon` / `cliprssmon` | external monitor screenshot → clipboard |
 | `bin/fssmon` / `rssmon` | external monitor screenshots |
-| `bin/fix-grok-clipboard` | Grok binary update helper |
 | `dockerinstall.txt` | old Docker Desktop notes |
 
 ## Install
@@ -50,9 +47,7 @@ git clone https://github.com/apoorvapendse/dotfiles.git ~/src/dotfiles
 cd ~/src/dotfiles
 cp -a .zshrc .bashrc .bash_profile .tmux.conf .xinitrc ~/
 cp -n .gitconfig.example ~/.gitconfig   # then edit name/email
-mkdir -p ~/.config ~/.local/bin ~/.grok
 cp -a .config/* ~/.config/
-cp -a .grok/config.toml ~/.grok/
 cp -a bin/* ~/.local/bin/
 chmod +x ~/.local/bin/*
 

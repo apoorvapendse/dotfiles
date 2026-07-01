@@ -10,3 +10,8 @@ bin/safari-linux
 **/hosts.yml
 **/*history
 .gitconfig
+
+# Grok CLI (keep local only)
+.grok/
+**/fix-grok-clipboard
+**/grok.fish
